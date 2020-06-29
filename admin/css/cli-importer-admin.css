@@ -1,0 +1,31 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+#import_form h1.wp-heading-inline {
+    margin: 0 0 10px;
+}
+#message {
+	 display: none;
+}
+#runImport {
+	display: inline-flex;
+    align-items: center;
+    justify-content: center;
+	padding: 8px 15px;
+}
+#runImport .spinner-border {
+	margin: 0 0 0 10px;
+    display: none;
+}
+#import_form .custom-file-label::after {
+    color: #fff;
+    background-color: #007cba;
+}
+#import_form .custom-file-label {
+    height: calc(1.5em + .75rem + 3px);
+}
+#import_form .custom-file-input:focus~.custom-file-label {
+    border-color: transparent;
+    box-shadow: 0 0 0 0.1rem rgba(116, 116, 116, 0.25);
+}
