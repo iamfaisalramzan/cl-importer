@@ -102,7 +102,6 @@ class Cli_Importer_Admin {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/cli-importer-admin.js', array( 'jquery' ), rand(10, 10000), false );
 
 		// For JS access
@@ -136,20 +135,25 @@ class Cli_Importer_Admin {
 	public function import_form(){
 		$output = '';
 		$output .= '
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="'.plugin_dir_url( __FILE__ ).'css/bootstrap.min.css">
+		<script src="'.plugin_dir_url( __FILE__ ).'js/popper.min.js"></script>
+		<script src="'.plugin_dir_url( __FILE__ ).'js/bootstrap.min.js"></script>
 		<div class="wrap" id="import_form">
 			<h1 class="wp-heading-inline">Import CL Products</h1>
 			<div id="message" class="notice notice-success is-dismissible">
 				<p></p>
 			</div>
 			<form>
-				<h6>Upload CSV File</h6>
 				<div class="custom-file">
+					<h6>Upload CSV File</h6>
 					<input type="file" class="custom-file-input" id="csvFile" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
 					<label class="custom-file-label" for="csvFile">Choose file</label>
+				</div>
+				
+				<div class="images-path">
+					<h6>Images Path</h6>
+					<input type="text" class="form-control" id="imagesPath" name="imagesPath" value="https://contactlensdemo.optiserver.co.uk/dblutadmir/cl-images/" />
+					<small id="imagesfieldHelp" class="form-text text-muted">(e.g.,  https://contactlensdemo.optiserver.co.uk/dblutadmir/cl-images/)</small>
 				</div>
 			</form> 
 			
@@ -170,6 +174,7 @@ class Cli_Importer_Admin {
 	public function import_data_from_manual_csv() {
 		global $wpdb;
 		$allData = array();
+		$imagesPath = filter_input(INPUT_POST, 'imagesPath');
 		$count = 1;
 		// check if file exist
 		if(isset($_FILES['file'])) {
@@ -267,15 +272,17 @@ class Cli_Importer_Admin {
 						) );
 		
 						// Get product image using CLID
-						$url = 'https://contactlensdemo.optiserver.co.uk/dblutadmir/cl-images/'.$clid.'.png';
-						if (@getimagesize($url)) {
-							$url = 'https://contactlensdemo.optiserver.co.uk/dblutadmir/cl-images/'.$clid.'.png';
+						$url = $imagesPath.$clid.'.png';
+						$url_is_image = $this->url_is_image($url);
+						if ($url_is_image) {
+							$url = $imagesPath.$clid.'.png';
 						} else {
 							$url = plugin_dir_url( dirname( __FILE__ ) ).'admin/images/no_image.png';
 						}
-						
+						 
 						// Upload product image in WordPress media and attach to product
-						$image = $this->upload_image($url, $post_id);
+						//$image = $this->upload_image($url, $post_id);
+						$image = $this->getImage($url, $post_id);
 						
 						update_post_meta( $post_id, 'product_code', $product_code );
 						update_post_meta( $post_id, 'total_sales', '0' );
@@ -608,5 +615,52 @@ class Cli_Importer_Admin {
 			}
 		}
 		return $image;
+	}
+
+	public function url_is_image( $url ) {
+		if ( ! filter_var( $url, FILTER_VALIDATE_URL ) ) {
+			return FALSE;
+		}
+		$ext = array( 'jpeg', 'jpg', 'gif', 'png' );
+		$info = (array) pathinfo( parse_url( $url, PHP_URL_PATH ) );
+		return isset( $info['extension'] )
+			&& in_array( strtolower( $info['extension'] ), $ext, TRUE );
+	}
+
+	public function getImage($url, $post_id) {
+		// Add Featured Image to Products
+		$image_url        = $url; // Define the image URL here
+		$image_name       = basename($url);
+		$upload_dir       = wp_upload_dir(); // Set upload folder
+		$image_data       = file_get_contents($image_url); // Get image data
+		$unique_file_name = wp_unique_filename( $upload_dir['path'], $image_name ); // Generate unique name
+		$filename         = basename( $unique_file_name ); // Create image file name
+		// Check folder permission and define file location
+		if( wp_mkdir_p( $upload_dir['path'] ) ) {
+			$file = $upload_dir['path'] . '/' . $filename;
+		} else {
+			$file = $upload_dir['basedir'] . '/' . $filename;
+		}
+		// Create the image  file on the server
+		file_put_contents( $file, $image_data );
+		// Check image file type
+		$wp_filetype = wp_check_filetype( $filename, null );
+		// Set attachment data
+		$attachment = array(
+			'post_mime_type' => $wp_filetype['type'],
+			'post_title'     => sanitize_file_name( $filename ),
+			'post_content'   => '',
+			'post_status'    => 'inherit'
+		);
+		// Create the attachment
+		$attach_id = wp_insert_attachment( $attachment, $file, $post_id );
+		// Include image.php
+		require_once(ABSPATH . 'wp-admin/includes/image.php');
+		// Define attachment metadata
+		$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
+		// Assign metadata to attachment
+		wp_update_attachment_metadata( $attach_id, $attach_data );
+		// And finally assign featured image to post
+		set_post_thumbnail( $post_id, $attach_id );
 	}
 }

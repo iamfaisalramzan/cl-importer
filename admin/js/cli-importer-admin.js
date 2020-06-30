@@ -59,8 +59,10 @@
 		$('#message p').empty();
 		var form_data = new FormData();
 		var importFile = $('#csvFile')[0].files;
+		var imagesPath = $('#imagesPath').val();
 		form_data.append('action', 'csv_ajax_call');
 		form_data.append('file', importFile[0]);
+		form_data.append('imagesPath', imagesPath);
 		$.ajax({
 			type: 'POST',
 			dataType: 'json',
@@ -76,15 +78,17 @@
 				$("#runImport").prop("disabled", true);
 			},
 			success: function(data){
+				console.log(data);
 				$('.spinner-border').hide();
 				$('#message').show().addClass(data.status);
 				$('#message p').append(data.message);
 				$("#runImport").prop("disabled", false);
-				console.log(data);
 			},
             error: function (request, status, error) {
                 console.log("Status : ", status);
 				console.log("Error : ", error);
+				console.log("Request : ", request);
+				$('.spinner-border').hide();
 				$('#message').show().addClass('error');
 				$('#message p').append(status);
                 $("#runImport").prop("disabled", false);

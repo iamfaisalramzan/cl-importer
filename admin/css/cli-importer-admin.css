@@ -29,3 +29,9 @@
     border-color: transparent;
     box-shadow: 0 0 0 0.1rem rgba(116, 116, 116, 0.25);
 }
+#import_form .custom-file-label {
+    top: 30px;
+}
+#import_form .images-path {
+    margin: 30px 0 0;
+}
