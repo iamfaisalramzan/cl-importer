@@ -153,7 +153,7 @@ class Cli_Importer_Admin {
 				<div class="images-path">
 					<h6>Images Path</h6>
 					<input type="text" class="form-control" id="imagesPath" name="imagesPath" value="https://contactlensdemo.optiserver.co.uk/dblutadmir/cl-images/" />
-					<small id="imagesfieldHelp" class="form-text text-muted">(e.g.,  https://contactlensdemo.optiserver.co.uk/dblutadmir/cl-images/)</small>
+					<small id="imagesfieldHelp" class="form-text text-muted">(e.g.,  https://contactlensdemo.optiserver.co.uk/dblutadmir/cl-images/<span style="background: yellow;">002101.png</span>)</small>
 				</div>
 			</form> 
 			
