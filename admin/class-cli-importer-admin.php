@@ -547,6 +547,7 @@ class Cli_Importer_Admin {
 						update_post_meta( $variation_id, '_stock_status', 'instock'); 
 						update_post_meta( $post_id, '_stock_status', 'instock');
 						update_post_meta( $post_id, '_price', $regular_price );
+						update_post_meta( $post_id, '_regular_price', $regular_price );
 
 						// For console to verify data as OBJECT
 						$dataToInsert = [
